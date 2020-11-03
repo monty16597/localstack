@@ -1442,6 +1442,7 @@ class S3ListenerTest(unittest.TestCase):
 
         client.delete_object(Bucket=bucket, Key='foo')
         client.delete_bucket(Bucket=bucket)
+
     # ---------------
     # HELPER METHODS
     # ---------------
