@@ -354,7 +354,11 @@ def append_cors_headers(bucket_name, request_method, request_headers, response):
     if not isinstance(rules, list):
         rules = [rules]
 
-    is_allowed = False
+    response.headers['Access-Control-Allow-Origin'] = ''
+    response.headers['Access-Control-Allow-Methods'] = ''
+    response.headers['Access-Control-Allow-Headers'] = ''
+    response.headers['Access-Control-Expose-Headers'] = ''
+
     for rule in rules:
         # add allow-origin header
         allowed_methods = rule.get('AllowedMethod', [])
@@ -366,30 +370,23 @@ def append_cors_headers(bucket_name, request_method, request_headers, response):
 
             for allowed in allowed_origins:
                 if origin in allowed or re.match(allowed.replace('*', '.*'), origin):
-                    is_allowed = True
 
                     response.headers['Access-Control-Allow-Origin'] = origin
                     if 'AllowedMethod' in rule:
                         response.headers['Access-Control-Allow-Methods'] = \
-                            ', '.join(allowed_methods) if isinstance(allowed_methods, list) else allowed_methods
+                            ','.join(allowed_methods) if isinstance(allowed_methods, list) else allowed_methods
                     if 'AllowedHeader' in rule:
                         allowed_headers = rule['AllowedHeader']
                         response.headers['Access-Control-Allow-Headers'] = \
-                            ', '.join(allowed_headers) if isinstance(allowed_headers, list) else allowed_headers
+                            ','.join(allowed_headers) if isinstance(allowed_headers, list) else allowed_headers
                     if 'ExposeHeader' in rule:
                         expose_headers = rule['ExposeHeader']
                         response.headers['Access-Control-Expose-Headers'] = \
-                            ', '.join(expose_headers) if isinstance(expose_headers, list) else expose_headers
+                            ','.join(expose_headers) if isinstance(expose_headers, list) else expose_headers
                     if 'MaxAgeSeconds' in rule:
                         maxage_header = rule['MaxAgeSeconds']
                         response.headers['Access-Control-Max-Age'] = maxage_header
                     break
-
-    if not is_allowed:
-        response.headers['Access-Control-Allow-Origin'] = ''
-        response.headers['Access-Control-Allow-Methods'] = ''
-        response.headers['Access-Control-Allow-Headers'] = ''
-        response.headers['Access-Control-Expose-Headers'] = ''
 
 
 def append_aws_request_troubleshooting_headers(response):

@@ -696,7 +696,7 @@ class S3ListenerTest(unittest.TestCase):
             'get_object', Params={'Bucket': bucket_name, 'Key': object_key}
         )
         response = requests.get(url, verify=False)
-        self.assertEquals(response.headers['Access-Control-Expose-Headers'], 'ETag, x-amz-version-id')
+        self.assertEquals(response.headers['Access-Control-Expose-Headers'], 'ETag,x-amz-version-id')
 
         # clean up
         self._delete_bucket(bucket_name, [object_key])

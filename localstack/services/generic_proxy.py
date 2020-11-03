@@ -41,13 +41,17 @@ CORS_ALLOWED_HEADERS = ['authorization', 'content-type', 'content-md5', 'cache-c
     'x-amz-content-sha256', 'x-amz-date', 'x-amz-security-token', 'x-amz-user-agent',
     'x-amz-target', 'x-amz-acl', 'x-amz-version-id', 'x-localstack-target', 'x-amz-tagging']
 if EXTRA_CORS_ALLOWED_HEADERS:
-    CORS_ALLOWED_HEADERS += EXTRA_CORS_ALLOWED_HEADERS.split(', ')
+    CORS_ALLOWED_HEADERS += EXTRA_CORS_ALLOWED_HEADERS.split(',')
 
 CORS_ALLOWED_METHODS = ('HEAD', 'GET', 'PUT', 'POST', 'DELETE', 'OPTIONS', 'PATCH')
 
 CORS_EXPOSE_HEADERS = ('x-amz-version-id', )
 if EXTRA_CORS_EXPOSE_HEADERS:
     CORS_EXPOSE_HEADERS += tuple(EXTRA_CORS_EXPOSE_HEADERS.split(','))
+
+ALLOWED_CORS_RESPONSE_HEADERS = ['Access-Control-Allow-Origin', 'Access-Control-Allow-Methods',
+    'Access-Control-Allow-Headers', 'Access-Control-Max-Age', 'Access-Control-Allow-Credentials',
+    'Access-Control-Expose-Headers']
 
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
@@ -284,10 +288,6 @@ class GenericProxyHandler(BaseHTTPRequestHandler):
 
 def append_cors_headers(response=None):
     # Note: Use "response is not None" here instead of "not response"!
-    ALLOWED_CORS_RESPONSE_HEADERS = [
-        'Access-Control-Allow-Origin', 'Access-Control-Allow-Methods', 'Access-Control-Allow-Headers',
-        'Access-Control-Max-Age', 'Access-Control-Allow-Credentials', 'Access-Control-Expose-Headers'
-    ]
 
     headers = {} if response is None else response.headers
     if 'Access-Control-Allow-Origin' not in headers:
@@ -302,7 +302,7 @@ def append_cors_headers(response=None):
         headers['Access-Control-Expose-Headers'] = ','.join(CORS_EXPOSE_HEADERS)
 
     for header in ALLOWED_CORS_RESPONSE_HEADERS:
-        if header in headers and not len(headers[header]):
+        if headers.get(header) == '':
             del headers[header]
 
 
@@ -414,7 +414,7 @@ def modify_and_forward(method=None, path=None, data_bytes=None, headers=None, fo
     # Checking whether response is comming from S3 listner
     from localstack.services.s3.s3_listener import ProxyListenerS3
     is_s3 = any([True if isinstance(service_listener, ProxyListenerS3) else False for service_listener in listeners])
-    if is_s3:
+    if not is_s3:
         append_cors_headers(response)
     return response
 
