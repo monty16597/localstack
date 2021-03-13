@@ -246,10 +246,28 @@ def ping(host):
 
 def in_docker():
     """ Returns True if running in a docker container, else False """
+    print('------------------- Checking if Running inside the Docker -------------------')
     if not os.path.exists('/proc/1/cgroup'):
         return False
+    try:
+        if any([
+            os.path.exists('/sys/fs/cgroup/memory/docker/'),
+            any(['docker-' in file_names for file_names in os.listdir('/sys/fs/cgroup/memory/system.slice')]),
+            os.path.exists('/sys/fs/cgroup/docker/'),
+            any(['docker-' in file_names for file_names in os.listdir('/sys/fs/cgroup/system.slice/')]),
+        ]):
+            print('------------------- NOT 1 Running inside the Docker -------------------')
+            return False
+    except FileNotFoundError:
+        pass
     with open('/proc/1/cgroup', 'rt') as ifh:
-        return 'docker' in ifh.read()
+        os_hostname = open('/etc/hostname', 'rt').read().strip()
+        lines_list = ifh.read().split('\n')
+        if any([os_hostname in element for element in lines_list]) or 'docker' in ifh.read():
+            print('------------------- Running inside the Docker -------------------')
+            return True
+    print('------------------- NOT 2 Running inside the Docker -------------------')
+    return False
 
 
 is_in_docker = in_docker()
